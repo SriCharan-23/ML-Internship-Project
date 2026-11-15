@@ -1,0 +1,104 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Telco Customer Churn Prediction API",
+    "description": "Real-time & batch churn scoring service with lineage tracking and PSI drift detection.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Operations"],
+        "summary": "Health Check",
+        "responses": {
+          "200": { "description": "Service and model lineage metadata" }
+        }
+      }
+    },
+    "/v1/predict": {
+      "post": {
+        "tags": ["Inference"],
+        "summary": "Predict Single Customer Churn",
+        "security": [{ "APIKeyHeader": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CustomerFeatures" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Churn probability, binary decision, and lineage metadata",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PredictionResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing X-API-Key header" },
+          "422": { "description": "Validation Error" }
+        }
+      }
+    },
+    "/v1/predict/batch": {
+      "post": {
+        "tags": ["Inference"],
+        "summary": "Predict Batch Customer Churn (up to 1,000 records)",
+        "security": [{ "APIKeyHeader": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BatchPredictionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch prediction array",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchPredictionResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/drift": {
+      "get": {
+        "tags": ["Monitoring"],
+        "summary": "Evaluate Population Stability Index (PSI) on Recent Traffic",
+        "security": [{ "APIKeyHeader": [] }],
+        "parameters": [
+          {
+            "name": "psi_threshold",
+            "in": "query",
+            "schema": { "type": "number", "default": 0.2 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PSI drift report across numeric and categorical features",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DriftCheckResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  }
+}
